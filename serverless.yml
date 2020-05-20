@@ -1,0 +1,103 @@
+service:
+  name: email-service
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: '${opt:stage,''dev''}'
+  memorySize: 256
+  timeout: 15
+  region: us-east-1
+  stackName: 'email-service-${self:provider.stage}'
+  environment:
+    DEPLOYED_ENV: ${self:provider.stage}
+    MEDIA_BUCKET: !Ref EmailServiceMediaBucket
+    API_URL:
+      Fn::Join:
+        - ""
+        - - "https://"
+          - Ref: "ApiGatewayRestApi"
+          - ".execute-api.${self:provider.region}.amazonaws.com/${self:provider.stage}"
+functions:
+  send:
+    handler: lambdas/send.handler
+    role: EmailServiceLambdaRole
+    reservedConcurrency: 20
+    events:
+      - http:
+          path: /v1/send
+          method: post
+          async: false
+      - http:
+          path: /v2/send
+          method: post
+          async: false
+resources:
+  Resources:
+    ############################
+    ########## Common ##########
+    ############################
+    LegacyApiKeysParameter:
+      Type: AWS::SSM::Parameter
+      Properties:
+        Name: !Sub /${self:service.name}/${self:provider.stage}/LEGACY_API_KEYS
+        Type: String
+        Value: '[]'
+    EmailServiceLambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+        Path: /
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: 'email-service-${self:provider.stage}-lambda-role-policy'
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource: '*'
+                - Effect: Allow
+                  Action:
+                    - s3:GetObject
+                    - s3:PutObject
+                  Resource: !Join ['', [ 'arn:aws:s3:::', !Ref EmailServiceMediaBucket, '/*' ] ]
+                - Effect: Allow
+                  Action:
+                    - sns:Publish
+                  Resource: '*'
+                - Effect: Allow
+                  Action:
+                    - ses:SendEmail
+                    - ses:SendRawEmail
+                  Resource:
+                    - '*'
+                - Effect: Allow
+                  Action:
+                    - ssm:GetParameter
+                    - ssm:GetParameters
+                  Resource: 'arn:aws:ssm:${self:provider.region}:*:parameter/email-service/${self:provider.stage}/*'
+    EmailServiceMediaBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: 'email-service-${self:provider.stage}-media'
+
+  ##################################
+  ########## Stack Outputs #########
+  ##################################
+  Outputs:
+    ApiUrl:
+      Description: "Conversion Service API Endpoint"
+      Value:
+        Fn::Join:
+          - ""
+          - - "https://"
+            - Ref: ApiGatewayRestApi
+            - ".execute-api.${self:provider.region}.amazonaws.com/${self:provider.stage}"
