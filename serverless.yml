@@ -11,12 +11,9 @@ provider:
   environment:
     DEPLOYED_ENV: ${self:provider.stage}
     MEDIA_BUCKET: !Ref EmailServiceMediaBucket
-    API_URL:
-      Fn::Join:
-        - ""
-        - - "https://"
-          - Ref: "ApiGatewayRestApi"
-          - ".execute-api.${self:provider.region}.amazonaws.com/${self:provider.stage}"
+    EMAIL_RECORD_TABLE: !Ref EmailServiceTable
+    API_BASE_URL:
+      !Join ['', [ 'https://', !Ref ApiGatewayRestApi, '.execute-api.${self:provider.region}.amazonaws.com/${self:provider.stage}' ] ]
 functions:
   send:
     handler: lambdas/send.handler
@@ -24,11 +21,7 @@ functions:
     reservedConcurrency: 20
     events:
       - http:
-          path: /v1/send
-          method: post
-          async: false
-      - http:
-          path: /v2/send
+          path: /send
           method: post
           async: false
 resources:
@@ -36,18 +29,23 @@ resources:
     ############################
     ########## Common ##########
     ############################
-    LegacyApiKeysParameter:
+    EmailServiceDefaultFromParameter:
       Type: AWS::SSM::Parameter
       Properties:
-        Name: !Sub /${self:service.name}/${self:provider.stage}/LEGACY_API_KEYS
+        Name: !Sub /${self:service.name}/${self:provider.stage}/DEFAULT_FROM_ADDRESS
         Type: String
-        Value: '[]'
+        Value: 'noreply@eztouch-menu.com'
+    EmailServiceDefaultFromName:
+      Type: AWS::SSM::Parameter
+      Properties:
+        Name: !Sub /${self:service.name}/${self:provider.stage}/DEFAULT_FROM_NAME
+        Type: String
+        Value: 'EZTouch Menu'
     EmailServiceLambdaRole:
       Type: AWS::IAM::Role
       Properties:
         Path: /
         AssumeRolePolicyDocument:
-          Version: '2012-10-17'
           Statement:
             - Effect: Allow
               Principal:
@@ -56,7 +54,6 @@ resources:
         Policies:
           - PolicyName: 'email-service-${self:provider.stage}-lambda-role-policy'
             PolicyDocument:
-              Version: '2012-10-17'
               Statement:
                 - Effect: Allow
                   Action:
@@ -81,23 +78,39 @@ resources:
                     - '*'
                 - Effect: Allow
                   Action:
-                    - ssm:GetParameter
-                    - ssm:GetParameters
-                  Resource: 'arn:aws:ssm:${self:provider.region}:*:parameter/email-service/${self:provider.stage}/*'
+                    - dynamodb:Query
+                    - dynamodb:Scan
+                    - dynamodb:GetItem
+                    - dynamodb:PutItem
+                    - dynamodb:UpdateItem
+                    - dynamodb:DeleteItem
+                  Resource: !GetAtt EmailServiceTable.Arn
+    EmailServiceTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: emailId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: emailId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+        TimeToLiveSpecification:
+          AttributeName: lifecycleExpiresAt
+          Enabled: true
     EmailServiceMediaBucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: 'email-service-${self:provider.stage}-media'
+        BucketName: 'eztouch-menu-email-service-${self:provider.stage}-media'
 
   ##################################
   ########## Stack Outputs #########
   ##################################
   Outputs:
-    ApiUrl:
-      Description: "Conversion Service API Endpoint"
+    SendEmailEndpoint:
+      Description: "Send Email Endpoint"
       Value:
-        Fn::Join:
-          - ""
-          - - "https://"
-            - Ref: ApiGatewayRestApi
-            - ".execute-api.${self:provider.region}.amazonaws.com/${self:provider.stage}"
+        !Join ['', [ 'https://', !Ref ApiGatewayRestApi, '.execute-api.${self:provider.region}.amazonaws.com/${self:provider.stage}', '/send' ] ]
