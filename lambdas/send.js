@@ -114,6 +114,10 @@ const buildEmailInstructions = async ({ request, requestId, requestedAt }) => {
       name: recipient.name,
     })),
     attachments: attachments.length > 0 ? attachments : undefined,
+    headers: {
+      ...request.headers,
+      "x-email-service-id": requestId,
+    },
   };
 };
 
