@@ -23,18 +23,14 @@ const handler = async (event, context, callback) => {
     // Create Email Record for tracking
     await putDocument({
       tableName: process.env.RECORD_TABLE,
-      conditionExpression: "attribute_not_exists(transportId)",
+      conditionExpression: "attribute_not_exists(emailServiceId)",
       document: {
         emailServiceId: emailInstructions.emailServiceId,
         provider: "ses",
         providerJobId: false,
         status: "requested",
-        sentAt: emailInstructions.sentAt,
-        // mediaUrls: transportInstructions.mediaUrls,
-        // files: transportFiles,
-        // attempts: 0,
-        // provider: transportInstructions.provider || false,
-        // providerJobId: false,
+        requestedAt: emailInstructions.sentAt,
+        sentAt: false,
         lifecycleExpiresAt: calculateLifecycleExpiration({
           date: new Date(),
           daysToExpiration: EMAIL_SERVICE_RECORD_LIFECYCLE_EXPIRATION_DAYS,

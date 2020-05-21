@@ -7,13 +7,12 @@ provider:
   memorySize: 256
   timeout: 15
   region: us-east-1
-  stackName: 'email-service-${self:provider.stage}'
+  stackName: ${self:service.name}-${self:provider.stage}
   environment:
     DEPLOYED_ENV: ${self:provider.stage}
     MEDIA_BUCKET: !Ref EmailServiceMediaBucket
     RECORD_TABLE: !Ref EmailServiceTable
-    API_BASE_URL:
-      !Join ['', [ 'https://', !Ref ApiGatewayRestApi, '.execute-api.${self:provider.region}.amazonaws.com/${self:provider.stage}' ] ]
+    API_BASE_URL: !Join ['', [ 'https://', !Ref ApiGatewayRestApi, '.execute-api.${self:provider.region}.amazonaws.com/${self:provider.stage}' ] ]
 functions:
   send:
     handler: lambdas/send.handler
@@ -52,7 +51,7 @@ resources:
                 Service: lambda.amazonaws.com
               Action: sts:AssumeRole
         Policies:
-          - PolicyName: 'email-service-${self:provider.stage}-lambda-role-policy'
+          - PolicyName: ${self:service.name}-${self:provider.stage}-lambda-role-policy
             PolicyDocument:
               Statement:
                 - Effect: Allow
@@ -90,10 +89,10 @@ resources:
       DeletionPolicy: Retain
       Properties:
         AttributeDefinitions:
-          - AttributeName: emailId
+          - AttributeName: emailServiceId
             AttributeType: S
         KeySchema:
-          - AttributeName: emailId
+          - AttributeName: emailServiceId
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 5
@@ -103,8 +102,6 @@ resources:
           Enabled: true
     EmailServiceMediaBucket:
       Type: AWS::S3::Bucket
-      Properties:
-        BucketName: 'eztouch-menu-email-service-${self:provider.stage}-media'
 
   ##################################
   ########## Stack Outputs #########
