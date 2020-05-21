@@ -60,7 +60,7 @@ const buildEmailInstructions = async (request) => {
     : [];
 
   return {
-    from: request.from.email,
+    from: request.from,
     subject: request.subject,
     html: request.content.html,
     text: request.content.text,
@@ -116,7 +116,7 @@ const validateRequest = ({ request }) => {
     attachments: rules.ARRAY.optional(),
   });
 
-  const { value, error } = requestValidator(request);
+  const { value, error } = requestValidator.validate(request);
 
   if (error) {
     throw error;

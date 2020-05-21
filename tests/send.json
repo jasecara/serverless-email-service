@@ -11,6 +11,19 @@
         "email": "jasecara@gmail.com",
         "name": "Jase Cara"
       }
+    ],
+    "cc": [
+      {
+        "email": "jasecara@gmail.com",
+        "name": "Jase Cara"
+      }
+    ],
+    "bcc": [
+      {
+        "email": "jasecara@gmail.com",
+        "name": "Jase Cara"
+      }
     ]
-  }
+  },
+  "attachments": []
 }
