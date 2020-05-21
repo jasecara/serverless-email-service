@@ -40,6 +40,8 @@ resources:
         Name: !Sub /${self:service.name}/${self:provider.stage}/DEFAULT_FROM_NAME
         Type: String
         Value: 'EZTouch Menu'
+    EmailServiceMediaBucket:
+      Type: AWS::S3::Bucket
     EmailServiceLambdaRole:
       Type: AWS::IAM::Role
       Properties:
@@ -100,8 +102,45 @@ resources:
         TimeToLiveSpecification:
           AttributeName: lifecycleExpiresAt
           Enabled: true
-    EmailServiceMediaBucket:
-      Type: AWS::S3::Bucket
+
+    ############################
+    ## Delivery Notifications ##
+    ############################
+    EmailServiceNotificationBounceTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: ${self:service.name}-${self:provider.stage}-notification-bounced
+    EmailServiceNotificationComplaintTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: ${self:service.name}-${self:provider.stage}-notification-complaint
+
+
+
+    EmailServiceNotificationDeliveryTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: ${self:service.name}-${self:provider.stage}-notification-delivery
+    EmailServiceNotificationDeliveryTopicSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        TopicArn: !Ref EmailServiceNotificationDeliveryTopic
+        Endpoint: !GetAtt
+          - TransportRouterQueue
+          - Arn
+        Protocol: sqs
+        RawMessageDelivery: true
+    EmailServiceNotificationDeliveryQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        MessageRetentionPeriod: 604800
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt EmailServiceNotificationDeliveryDLQ.Arn
+          maxReceiveCount: 3
+    EmailServiceNotificationDeliveryDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        MessageRetentionPeriod: 1209600
 
   ##################################
   ########## Stack Outputs #########
