@@ -1,9 +1,9 @@
-POST https://pg6671acsc.execute-api.us-east-1.amazonaws.com/dev/send
+POST https://99k4w03z32.execute-api.us-east-1.amazonaws.com/dev/send
 Content-Type: application/json
 
 {
   "from": "noreply@eztouchmenu.com",
-  "subject": "This is the subject of the new email 1",
+  "subject": "This is the subject of the new email 44",
   "content": {
     "text": "This is the plain text email content",
     "html": "<html><body><h1>This is the html email content</h1></body></html>"

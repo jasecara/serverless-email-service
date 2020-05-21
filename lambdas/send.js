@@ -29,7 +29,7 @@ const handler = async (event, context, callback) => {
         provider: "ses",
         providerJobId: false,
         status: "requested",
-        requestedAt: emailInstructions.sentAt,
+        requestedAt: new Date().toISOString(),
         sentAt: false,
         lifecycleExpiresAt: calculateLifecycleExpiration({
           date: new Date(),
