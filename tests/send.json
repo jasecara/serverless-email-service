@@ -1,5 +1,5 @@
 {
-  "from": "j.cara@chargebacks911.com",
+  "from": "jasecara@gmail.com",
   "subject": "This is the subject of email",
   "content": {
     "text": "This is the plain text email content",
@@ -8,30 +8,9 @@
   "recipients": {
     "to": [
       {
-        "email": "j.cara@chargebacks911.com",
-        "name": "Jase Cara"
-      }
-    ],
-    "cc": [
-      {
-        "email": "j.cara@chargebacks911.com",
-        "name": "Jase Cara"
-      },
-      {
-        "email": "j.cara@chargebacks911.com",
-        "name": "Jase Cara"
-      }
-    ],
-    "bcc": [
-      {
-        "email": "j.cara@chargebacks911.com",
-        "name": "Jase Cara"
-      },
-      {
-        "email": "j.cara@chargebacks911.com",
+        "email": "jasecara@gmail.com",
         "name": "Jase Cara"
       }
     ]
-  },
-  "attachments": []
+  }
 }
