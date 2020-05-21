@@ -1,16 +1,46 @@
 const { send } = require("../lib/mail");
 const { validationSchema, rules } = require("../lib/validate");
+const { putDocument } = require("../lib/dynamoDb");
+
+// Transport Record Lifecycle Expiration ( In Days )
+const EMAIL_SERVICE_RECORD_LIFECYCLE_EXPIRATION_DAYS = 365;
 
 const handler = async (event, context, callback) => {
   try {
-    // Parse Request
+    // Parse Request JSON
     const request = JSON.parse(event.body);
 
     // Validate Request
     validateRequest({ request });
 
     // Get Email Instructions
-    const emailInstructions = await buildEmailInstructions(request);
+    const emailInstructions = await buildEmailInstructions({
+      request,
+      requestId: event.requestContext.requestId,
+      requestedAt: event.requestContext.requestTimeEpoch,
+    });
+
+    // Create Email Record for tracking
+    await putDocument({
+      tableName: process.env.RECORD_TABLE,
+      conditionExpression: "attribute_not_exists(transportId)",
+      document: {
+        emailServiceId: emailInstructions.emailServiceId,
+        provider: "ses",
+        providerJobId: false,
+        status: "requested",
+        sentAt: emailInstructions.sentAt,
+        // mediaUrls: transportInstructions.mediaUrls,
+        // files: transportFiles,
+        // attempts: 0,
+        // provider: transportInstructions.provider || false,
+        // providerJobId: false,
+        lifecycleExpiresAt: calculateLifecycleExpiration({
+          date: new Date(),
+          daysToExpiration: EMAIL_SERVICE_RECORD_LIFECYCLE_EXPIRATION_DAYS,
+        }),
+      },
+    });
 
     // Send Email
     await send(emailInstructions);
@@ -42,6 +72,14 @@ const handler = async (event, context, callback) => {
   }
 };
 
+// Outputs date in future
+const calculateLifecycleExpiration = ({ date, daysToExpiration }) =>
+  Math.ceil(
+    new Date(
+      date.getTime() + daysToExpiration * 24 * 60 * 60 * 1000
+    ).getTime() / 1000
+  );
+
 // structure response sent to api gateway callback
 const response = async ({ callback, statusCode, body }) =>
   callback(null, {
@@ -51,7 +89,7 @@ const response = async ({ callback, statusCode, body }) =>
   });
 
 // Build Instructions From Request to send email
-const buildEmailInstructions = async (request) => {
+const buildEmailInstructions = async ({ request, requestId, requestedAt }) => {
   const attachments = request.attachments
     ? request.attachments.map((attachment) => ({
         filename: attachment.name,
@@ -60,6 +98,8 @@ const buildEmailInstructions = async (request) => {
     : [];
 
   return {
+    emailServiceId: requestId,
+    requestedAt: new Date(requestedAt).toISOString(),
     from: request.from,
     subject: request.subject,
     html: request.content.html,

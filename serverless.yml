@@ -11,7 +11,7 @@ provider:
   environment:
     DEPLOYED_ENV: ${self:provider.stage}
     MEDIA_BUCKET: !Ref EmailServiceMediaBucket
-    EMAIL_RECORD_TABLE: !Ref EmailServiceTable
+    RECORD_TABLE: !Ref EmailServiceTable
     API_BASE_URL:
       !Join ['', [ 'https://', !Ref ApiGatewayRestApi, '.execute-api.${self:provider.region}.amazonaws.com/${self:provider.stage}' ] ]
 functions:
