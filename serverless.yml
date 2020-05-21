@@ -17,12 +17,21 @@ functions:
   send:
     handler: lambdas/send.handler
     role: EmailServiceLambdaRole
-    reservedConcurrency: 20
+    reservedConcurrency: 100
     events:
       - http:
           path: /send
           method: post
           async: false
+  notification:
+    handler: lambdas/notification.handler
+    role: EmailServiceLambdaRole
+    reservedConcurrency: 100
+    events:
+      - sqs:
+          batchSize: 1
+          arn:
+            !GetAtt EmailServiceNotificationDeliveryQueue.Arn
 resources:
   Resources:
     ############################
@@ -40,8 +49,6 @@ resources:
         Name: !Sub /${self:service.name}/${self:provider.stage}/DEFAULT_FROM_NAME
         Type: String
         Value: 'EZTouch Menu'
-    EmailServiceMediaBucket:
-      Type: AWS::S3::Bucket
     EmailServiceLambdaRole:
       Type: AWS::IAM::Role
       Properties:
@@ -86,6 +93,14 @@ resources:
                     - dynamodb:UpdateItem
                     - dynamodb:DeleteItem
                   Resource: !GetAtt EmailServiceTable.Arn
+                - Effect: Allow
+                  Action:
+                    - sqs:ReceiveMessage
+                    - sqs:DeleteMessage
+                    - sqs:GetQueueAttributes
+                    - sqs:ChangeMessageVisibility
+                  Resource:
+                    - !GetAtt EmailServiceNotificationDeliveryQueue.Arn
     EmailServiceTable:
       Type: AWS::DynamoDB::Table
       DeletionPolicy: Retain
@@ -102,20 +117,21 @@ resources:
         TimeToLiveSpecification:
           AttributeName: lifecycleExpiresAt
           Enabled: true
+    EmailServiceMediaBucket:
+      Type: AWS::S3::Bucket
 
     ############################
     ## Delivery Notifications ##
     ############################
-    EmailServiceNotificationBounceTopic:
-      Type: AWS::SNS::Topic
-      Properties:
-        TopicName: ${self:service.name}-${self:provider.stage}-notification-bounced
-    EmailServiceNotificationComplaintTopic:
-      Type: AWS::SNS::Topic
-      Properties:
-        TopicName: ${self:service.name}-${self:provider.stage}-notification-complaint
 
-
+    ## EmailServiceNotificationBounceTopic:
+    ##  Type: AWS::SNS::Topic
+    ##  Properties:
+    ##    TopicName: ${self:service.name}-${self:provider.stage}-notification-bounced
+    ##EmailServiceNotificationComplaintTopic:
+    ##  Type: AWS::SNS::Topic
+    ##  Properties:
+    ##    TopicName: ${self:service.name}-${self:provider.stage}-notification-complaint
 
     EmailServiceNotificationDeliveryTopic:
       Type: AWS::SNS::Topic
@@ -126,7 +142,7 @@ resources:
       Properties:
         TopicArn: !Ref EmailServiceNotificationDeliveryTopic
         Endpoint: !GetAtt
-          - TransportRouterQueue
+          - EmailServiceNotificationDeliveryQueue
           - Arn
         Protocol: sqs
         RawMessageDelivery: true
@@ -141,6 +157,21 @@ resources:
       Type: AWS::SQS::Queue
       Properties:
         MessageRetentionPeriod: 1209600
+    EmailServiceNotificationDeliveryQueuePolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        PolicyDocument:
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: sns.amazonaws.com
+              Resource: !GetAtt EmailServiceNotificationDeliveryQueue.Arn
+              Action: SQS:SendMessage
+              Condition:
+                ArnEquals:
+                  "aws:SourceArn": !Ref EmailServiceNotificationDeliveryTopic
+        Queues:
+          - Ref: EmailServiceNotificationDeliveryQueue
 
   ##################################
   ########## Stack Outputs #########

@@ -39,6 +39,7 @@ const handler = async (event, context, callback) => {
     });
 
     // Send Email
+    // TODO: get ses message id and then write it to dynamo db
     await send(emailInstructions);
 
     // Return Response
