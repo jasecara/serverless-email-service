@@ -2,9 +2,6 @@ const { send } = require("../lib/mail");
 const { validationSchema, rules } = require("../lib/validate");
 const { putDocument } = require("../lib/dynamoDb");
 
-// Transport Record Lifecycle Expiration ( In Days )
-const EMAIL_SERVICE_RECORD_LIFECYCLE_EXPIRATION_DAYS = 365;
-
 const handler = async (event, context, callback) => {
   try {
     // Parse Request JSON
@@ -33,7 +30,7 @@ const handler = async (event, context, callback) => {
         sentAt: false,
         lifecycleExpiresAt: calculateLifecycleExpiration({
           date: new Date(),
-          daysToExpiration: EMAIL_SERVICE_RECORD_LIFECYCLE_EXPIRATION_DAYS,
+          daysToExpiration: process.env.RECORD_LIFECYCLE_EXPIRATION_DAYS,
         }),
       },
     });

@@ -10,9 +10,9 @@ provider:
   stackName: ${self:service.name}-${self:provider.stage}
   environment:
     DEPLOYED_ENV: ${self:provider.stage}
-    MEDIA_BUCKET: !Ref EmailServiceMediaBucket
-    RECORD_TABLE: !Ref EmailServiceTable
     SES_NOTIFICATION_CONFIGURATION_SET: !Ref EmailServiceNotificationConfigurationSet
+    RECORD_TABLE: !Ref EmailServiceTable
+    RECORD_LIFECYCLE_EXPIRATION_DAYS: !Ref EmailServiceRecordLifeCycleExpirationParameter
     API_BASE_URL: !Join ['', [ 'https://', !Ref ApiGatewayRestApi, '.execute-api.${self:provider.region}.amazonaws.com/${self:provider.stage}' ] ]
 functions:
   send:
@@ -34,22 +34,30 @@ functions:
           arn:
             !GetAtt EmailServiceNotificationDeliveryQueue.Arn
 resources:
+  ######################################
+  ##### Stack Customizable Params ######
+  ######################################
+  Parameters:
+    EmailServiceRecordLifeCycleExpirationParameter:
+      Type: String
+      Default: 180
+      Description: Number of days before email records in record table expire and are automatically removed.
+    EmailServiceNotificationQueueRetentionPeriodParameter:
+      Type: String
+      Default: 604800
+      Description: Number of seconds before item in notification queue expires
+    EmailServiceNotificationDLQRetentionPeriodParameter:
+      Type: String
+      Default: 1209600
+      Description: Number of seconds before item in notification dead letter queue expires
+
+  ####################################
+  ########## Stack Resources #########
+  ####################################
   Resources:
     ############################
     ########## Common ##########
     ############################
-    EmailServiceDefaultFromParameter:
-      Type: AWS::SSM::Parameter
-      Properties:
-        Name: !Sub /${self:service.name}/${self:provider.stage}/DEFAULT_FROM_ADDRESS
-        Type: String
-        Value: 'noreply@eztouch-menu.com'
-    EmailServiceDefaultFromName:
-      Type: AWS::SSM::Parameter
-      Properties:
-        Name: !Sub /${self:service.name}/${self:provider.stage}/DEFAULT_FROM_NAME
-        Type: String
-        Value: 'EZTouch Menu'
     EmailServiceLambdaRole:
       Type: AWS::IAM::Role
       Properties:
@@ -70,11 +78,6 @@ resources:
                     - logs:CreateLogStream
                     - logs:PutLogEvents
                   Resource: '*'
-                - Effect: Allow
-                  Action:
-                    - s3:GetObject
-                    - s3:PutObject
-                  Resource: !Join ['', [ 'arn:aws:s3:::', !Ref EmailServiceMediaBucket, '/*' ] ]
                 - Effect: Allow
                   Action:
                     - sns:Publish
@@ -118,8 +121,6 @@ resources:
         TimeToLiveSpecification:
           AttributeName: lifecycleExpiresAt
           Enabled: true
-    EmailServiceMediaBucket:
-      Type: AWS::S3::Bucket
 
     ############################
     ## Delivery Notifications ##
@@ -128,7 +129,6 @@ resources:
       Type: AWS::SES::ConfigurationSet
       Properties:
         Name: ${self:service.name}-${self:provider.stage}-notification-configuration-set
-
     EmailServiceNotificationDeliveryTopic:
       Type: AWS::SNS::Topic
       Properties:
@@ -145,14 +145,14 @@ resources:
     EmailServiceNotificationDeliveryQueue:
       Type: AWS::SQS::Queue
       Properties:
-        MessageRetentionPeriod: 604800
+        MessageRetentionPeriod: !Ref EmailServiceNotificationQueueRetentionPeriodParameter
         RedrivePolicy:
           deadLetterTargetArn: !GetAtt EmailServiceNotificationDeliveryDLQ.Arn
           maxReceiveCount: 3
     EmailServiceNotificationDeliveryDLQ:
       Type: AWS::SQS::Queue
       Properties:
-        MessageRetentionPeriod: 1209600
+        MessageRetentionPeriod: !Ref EmailServiceNotificationDLQRetentionPeriodParameter
     EmailServiceNotificationDeliveryQueuePolicy:
       Type: AWS::SQS::QueuePolicy
       Properties:
