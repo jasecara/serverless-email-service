@@ -124,16 +124,6 @@ resources:
     ############################
     ## Delivery Notifications ##
     ############################
-
-    ## EmailServiceNotificationBounceTopic:
-    ##  Type: AWS::SNS::Topic
-    ##  Properties:
-    ##    TopicName: ${self:service.name}-${self:provider.stage}-notification-bounced
-    ##EmailServiceNotificationComplaintTopic:
-    ##  Type: AWS::SNS::Topic
-    ##  Properties:
-    ##    TopicName: ${self:service.name}-${self:provider.stage}-notification-complaint
-
     EmailServiceNotificationConfigurationSet:
       Type: AWS::SES::ConfigurationSet
       Properties:
