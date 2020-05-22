@@ -40,7 +40,12 @@ const handler = async (event, context, callback) => {
 
     // Send Email
     // TODO: get ses message id and then write it to dynamo db
-    await send(emailInstructions);
+    await send({
+      ...emailInstructions,
+      ses: {
+        ConfigurationSetName: process.env.SES_NOTIFICATION_CONFIGURATION_SET,
+      },
+    });
 
     // Return Response
     await response({

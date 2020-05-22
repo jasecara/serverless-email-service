@@ -12,6 +12,7 @@ provider:
     DEPLOYED_ENV: ${self:provider.stage}
     MEDIA_BUCKET: !Ref EmailServiceMediaBucket
     RECORD_TABLE: !Ref EmailServiceTable
+    SES_NOTIFICATION_CONFIGURATION_SET: !Ref EmailServiceNotificationConfigurationSet
     API_BASE_URL: !Join ['', [ 'https://', !Ref ApiGatewayRestApi, '.execute-api.${self:provider.region}.amazonaws.com/${self:provider.stage}' ] ]
 functions:
   send:
@@ -132,6 +133,11 @@ resources:
     ##  Type: AWS::SNS::Topic
     ##  Properties:
     ##    TopicName: ${self:service.name}-${self:provider.stage}-notification-complaint
+
+    EmailServiceNotificationConfigurationSet:
+      Type: AWS::SES::ConfigurationSet
+      Properties:
+        Name: ${self:service.name}-${self:provider.stage}-notification-configuration-set
 
     EmailServiceNotificationDeliveryTopic:
       Type: AWS::SNS::Topic
