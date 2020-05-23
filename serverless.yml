@@ -32,7 +32,7 @@ functions:
       - sqs:
           batchSize: 1
           arn:
-            !GetAtt EmailServiceNotificationDeliveryQueue.Arn
+            !GetAtt EmailServiceStatusNotificationQueue.Arn
 resources:
   ######################################
   ##### Stack Customizable Params ######
@@ -42,11 +42,11 @@ resources:
       Type: String
       Default: 180
       Description: Number of days before email records in record table expire and are automatically removed.
-    EmailServiceNotificationQueueRetentionPeriodParameter:
+    EmailServiceStatusNotificationQueueRetentionPeriodParameter:
       Type: String
       Default: 604800
       Description: Number of seconds before item in notification queue expires
-    EmailServiceNotificationDLQRetentionPeriodParameter:
+    EmailServiceStatusNotificationDLQRetentionPeriodParameter:
       Type: String
       Default: 1209600
       Description: Number of seconds before item in notification dead letter queue expires
@@ -104,7 +104,7 @@ resources:
                     - sqs:GetQueueAttributes
                     - sqs:ChangeMessageVisibility
                   Resource:
-                    - !GetAtt EmailServiceNotificationDeliveryQueue.Arn
+                    - !GetAtt EmailServiceStatusNotificationQueue.Arn
     EmailServiceTable:
       Type: AWS::DynamoDB::Table
       DeletionPolicy: Retain
@@ -129,31 +129,31 @@ resources:
       Type: AWS::SES::ConfigurationSet
       Properties:
         Name: ${self:service.name}-${self:provider.stage}-notification-configuration-set
-    EmailServiceNotificationDeliveryTopic:
+    EmailServiceStatusNotificationTopic:
       Type: AWS::SNS::Topic
       Properties:
-        TopicName: ${self:service.name}-${self:provider.stage}-notification-delivery
-    EmailServiceNotificationDeliveryTopicSubscription:
+        TopicName: ${self:service.name}-${self:provider.stage}-notification
+    EmailServiceStatusNotificationTopicSubscription:
       Type: AWS::SNS::Subscription
       Properties:
-        TopicArn: !Ref EmailServiceNotificationDeliveryTopic
+        TopicArn: !Ref EmailServiceStatusNotificationTopic
         Endpoint: !GetAtt
-          - EmailServiceNotificationDeliveryQueue
+          - EmailServiceStatusNotificationQueue
           - Arn
         Protocol: sqs
         RawMessageDelivery: true
-    EmailServiceNotificationDeliveryQueue:
+    EmailServiceStatusNotificationQueue:
       Type: AWS::SQS::Queue
       Properties:
-        MessageRetentionPeriod: !Ref EmailServiceNotificationQueueRetentionPeriodParameter
+        MessageRetentionPeriod: !Ref EmailServiceStatusNotificationQueueRetentionPeriodParameter
         RedrivePolicy:
-          deadLetterTargetArn: !GetAtt EmailServiceNotificationDeliveryDLQ.Arn
+          deadLetterTargetArn: !GetAtt EmailServiceStatusNotificationDLQ.Arn
           maxReceiveCount: 3
-    EmailServiceNotificationDeliveryDLQ:
+    EmailServiceStatusNotificationDLQ:
       Type: AWS::SQS::Queue
       Properties:
-        MessageRetentionPeriod: !Ref EmailServiceNotificationDLQRetentionPeriodParameter
-    EmailServiceNotificationDeliveryQueuePolicy:
+        MessageRetentionPeriod: !Ref EmailServiceStatusNotificationDLQRetentionPeriodParameter
+    EmailServiceStatusNotificationQueuePolicy:
       Type: AWS::SQS::QueuePolicy
       Properties:
         PolicyDocument:
@@ -161,13 +161,13 @@ resources:
             - Effect: Allow
               Principal:
                 Service: sns.amazonaws.com
-              Resource: !GetAtt EmailServiceNotificationDeliveryQueue.Arn
+              Resource: !GetAtt EmailServiceStatusNotificationQueue.Arn
               Action: SQS:SendMessage
               Condition:
                 ArnEquals:
-                  "aws:SourceArn": !Ref EmailServiceNotificationDeliveryTopic
+                  "aws:SourceArn": !Ref EmailServiceStatusNotificationTopic
         Queues:
-          - Ref: EmailServiceNotificationDeliveryQueue
+          - Ref: EmailServiceStatusNotificationQueue
 
   ##################################
   ########## Stack Outputs #########

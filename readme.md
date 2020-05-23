@@ -38,7 +38,8 @@ For more information see: https://www.serverless.com/framework/docs/providers/aw
 ### Enabling Email Status Notifications
 Once your stack is deployed, head to the SES page in your AWS Console.
 Navigate to "Configuration Sets" and select the one named "email-service-dev-notification-configuration-set".
-Select Add Destination. Enter "new-notification-topic", check which email event types you would like to listen for, and then select the ARN created by you
+Select Add Destination. Enter "new-notification-topic", check which email event types you would like to listen for, 
+and then select the SNS ARN for delivery notifications created by the stack. (email-service-dev-notification on DEV stage)
 
 ### Sending Email
 
