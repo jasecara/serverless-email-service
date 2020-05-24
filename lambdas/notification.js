@@ -36,7 +36,7 @@ const handler = async (event, context) => {
             "#sentAt": "sentAt",
           },
           expressionAttributeValues: {
-            ":statusNew": EMAIL_STATUS_MAP.aws[notificationBody.eventType],
+            ":statusNew": EMAIL_STATUS_MAP.ses[notificationBody.eventType],
             ":sentAt": new Date().toISOString(),
           },
         })
