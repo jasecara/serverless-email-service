@@ -1,5 +1,5 @@
 {
-  "from": "jasecara@gmail.com",
+  "from": "noreply@example.com",
   "subject": "This is the subject of email",
   "content": {
     "text": "This is the plain text email content",
@@ -8,22 +8,21 @@
   "recipients": {
     "to": [
       {
-        "email": "jasecara@gmail.com",
-        "name": "Jase Cara"
+        "email": "jim@example.com",
+        "name": "Jim Halpert"
       }
     ],
     "cc": [
       {
-        "email": "jasecara@gmail.com",
-        "name": "Jase Cara"
+        "email": "oscar@gmail.com",
+        "name": "Stanley Hudson"
       }
     ],
     "bcc": [
       {
         "email": "jasecara@gmail.com",
-        "name": "Jase Cara"
+        "name": "Dwight Schrute"
       }
     ]
-  },
-  "attachments": []
+  }
 }

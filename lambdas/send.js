@@ -18,12 +18,14 @@ const handler = async (event, context, callback) => {
     });
 
     // Send Email
-    const providerJobId = (await send({
-      ...emailInstructions,
-      ses: {
-        ConfigurationSetName: process.env.SES_NOTIFICATION_CONFIGURATION_SET,
-      },
-    })).response;
+    const providerJobId = (
+      await send({
+        ...emailInstructions,
+        ses: {
+          ConfigurationSetName: process.env.SES_NOTIFICATION_CONFIGURATION_SET,
+        },
+      })
+    ).response;
 
     // Create Email Record for tracking
     await putDocument({
@@ -87,40 +89,30 @@ const response = async ({ callback, statusCode, body }) =>
   });
 
 // Build Instructions From Request to send email
-const buildEmailInstructions = async ({ request, requestId, requestedAt }) => {
-  const attachments = request.attachments
-    ? request.attachments.map((attachment) => ({
-      filename: attachment.name,
-      content: Buffer.from(attachment.content, "base64"),
-    }))
-    : [];
-
-  return {
-    emailServiceId: requestId,
-    requestedAt: new Date(requestedAt).toISOString(),
-    from: request.from,
-    subject: request.subject,
-    html: request.content.html,
-    text: request.content.text,
-    to: request.recipients.to.map((recipient) => ({
-      address: recipient.email,
-      name: recipient.name,
-    })),
-    cc: request.recipients.cc.map((recipient) => ({
-      address: recipient.email,
-      name: recipient.name,
-    })),
-    bcc: request.recipients.bcc.map((recipient) => ({
-      address: recipient.email,
-      name: recipient.name,
-    })),
-    attachments: attachments.length > 0 ? attachments : undefined,
-    headers: {
-      ...request.headers,
-      "x-email-service-id": requestId,
-    },
-  };
-};
+const buildEmailInstructions = async ({ request, requestId, requestedAt }) => ({
+  emailServiceId: requestId,
+  requestedAt: new Date(requestedAt).toISOString(),
+  from: request.from,
+  subject: request.subject,
+  html: request.content.html,
+  text: request.content.text,
+  to: request.recipients.to.map((recipient) => ({
+    address: recipient.email,
+    name: recipient.name,
+  })),
+  cc: request.recipients.cc.map((recipient) => ({
+    address: recipient.email,
+    name: recipient.name,
+  })),
+  bcc: request.recipients.bcc.map((recipient) => ({
+    address: recipient.email,
+    name: recipient.name,
+  })),
+  headers: {
+    ...request.headers,
+    "x-email-service-id": requestId,
+  },
+});
 
 // Validate Request confirms to api request specification
 const validateRequest = ({ request }) => {
@@ -128,34 +120,33 @@ const validateRequest = ({ request }) => {
     subject: rules.STRING.required(),
     from: rules.STRING.required(),
     content: rules
-    .OBJECT({
-      html: rules.ANY,
-      text: rules.ANY,
-    })
-    .required(),
+      .OBJECT({
+        html: rules.ANY,
+        text: rules.ANY,
+      })
+      .required(),
     recipients: rules
-    .OBJECT({
-      to: rules.ARRAY.items(
-        rules.OBJECT({
-          email: rules.EMAIL,
-          name: rules.STRING,
-        })
-      ).required(),
-      cc: rules.ARRAY.items(
-        rules.OBJECT({
-          email: rules.EMAIL,
-          name: rules.STRING,
-        })
-      ).optional(),
-      bcc: rules.ARRAY.items(
-        rules.OBJECT({
-          email: rules.EMAIL,
-          name: rules.STRING,
-        })
-      ).optional(),
-    })
-    .required(),
-    attachments: rules.ARRAY.optional(),
+      .OBJECT({
+        to: rules.ARRAY.items(
+          rules.OBJECT({
+            email: rules.EMAIL,
+            name: rules.STRING,
+          })
+        ).required(),
+        cc: rules.ARRAY.items(
+          rules.OBJECT({
+            email: rules.EMAIL,
+            name: rules.STRING,
+          })
+        ).optional(),
+        bcc: rules.ARRAY.items(
+          rules.OBJECT({
+            email: rules.EMAIL,
+            name: rules.STRING,
+          })
+        ).optional(),
+      })
+      .required(),
   });
 
   const { value, error } = requestValidator.validate(request);

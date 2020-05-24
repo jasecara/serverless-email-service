@@ -1,9 +1,9 @@
-POST https://99k4w03z32.execute-api.us-east-1.amazonaws.com/dev/send
+POST https://${API_ID}.execute-api.us-east-1.amazonaws.com/dev/send
 Content-Type: application/json
 
 {
-  "from": "noreply@eztouchmenu.com",
-  "subject": "This is the subject of the new email 44",
+  "from": "noreply@example.com",
+  "subject": "This is the subject of the email",
   "content": {
     "text": "This is the plain text email content",
     "html": "<html><body><h1>This is the html email content</h1></body></html>"
@@ -11,22 +11,21 @@ Content-Type: application/json
   "recipients": {
     "to": [
       {
-        "email": "jasecara@gmail.com",
-        "name": "Jase Cara"
+        "email": "jim@example.com",
+        "name": "Jim Halpert"
       }
     ],
     "cc": [
       {
-        "email": "jasecara@gmail.com",
-        "name": "Jase Cara"
+        "email": "oscar@gmail.com",
+        "name": "Stanley Hudson"
       }
     ],
     "bcc": [
       {
         "email": "jasecara@gmail.com",
-        "name": "Jase Cara"
+        "name": "Dwight Schrute"
       }
     ]
-  },
-  "attachments": []
+  }
 }
