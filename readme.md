@@ -16,7 +16,7 @@ More Info: [Verify Domain On AWS for SES](https://docs.aws.amazon.com/ses/latest
 Serverless is used to prepare and deploy this Cloud Formation Stack to AWS.
 You can learn more about serverless framework and how to quickly [get started here](https://www.serverless.com/framework/docs/getting-started/).
  
-Once you have verified serverless is installed and added your aws profile, you can deploy the stack to cloud formation
+Once you have verified serverless framework is installed and added your aws profile, you can deploy the stack to cloud formation
 
 ```
 sls deploy
