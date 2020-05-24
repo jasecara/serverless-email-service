@@ -5,6 +5,7 @@ in order to easily control application use and compliance. While currently lever
 be added in order to provide a fallback strategy for outbound email should the primary provider
 become unavailable / disabled due to email reputation or connectivity issues.
 
+
 All outbound emails are tracked in a Dynamo DB Table with a life cycle policy set to delete records after required data
 retention period has expired.
 
