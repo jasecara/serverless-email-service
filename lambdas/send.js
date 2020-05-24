@@ -17,6 +17,14 @@ const handler = async (event, context, callback) => {
       requestedAt: event.requestContext.requestTimeEpoch,
     });
 
+    // Send Email
+    const providerJobId = (await send({
+      ...emailInstructions,
+      ses: {
+        ConfigurationSetName: process.env.SES_NOTIFICATION_CONFIGURATION_SET,
+      },
+    })).response;
+
     // Create Email Record for tracking
     await putDocument({
       tableName: process.env.RECORD_TABLE,
@@ -24,7 +32,7 @@ const handler = async (event, context, callback) => {
       document: {
         emailServiceId: emailInstructions.emailServiceId,
         provider: "ses",
-        providerJobId: false,
+        providerJobId,
         status: "requested",
         requestedAt: new Date().toISOString(),
         sentAt: false,
@@ -32,15 +40,6 @@ const handler = async (event, context, callback) => {
           date: new Date(),
           daysToExpiration: process.env.RECORD_LIFECYCLE_EXPIRATION_DAYS,
         }),
-      },
-    });
-
-    // Send Email
-    // TODO: get ses message id and then write it to dynamo db
-    await send({
-      ...emailInstructions,
-      ses: {
-        ConfigurationSetName: process.env.SES_NOTIFICATION_CONFIGURATION_SET,
       },
     });
 
@@ -91,9 +90,9 @@ const response = async ({ callback, statusCode, body }) =>
 const buildEmailInstructions = async ({ request, requestId, requestedAt }) => {
   const attachments = request.attachments
     ? request.attachments.map((attachment) => ({
-        filename: attachment.name,
-        content: Buffer.from(attachment.content, "base64"),
-      }))
+      filename: attachment.name,
+      content: Buffer.from(attachment.content, "base64"),
+    }))
     : [];
 
   return {
@@ -129,33 +128,33 @@ const validateRequest = ({ request }) => {
     subject: rules.STRING.required(),
     from: rules.STRING.required(),
     content: rules
-      .OBJECT({
-        html: rules.ANY,
-        text: rules.ANY,
-      })
-      .required(),
+    .OBJECT({
+      html: rules.ANY,
+      text: rules.ANY,
+    })
+    .required(),
     recipients: rules
-      .OBJECT({
-        to: rules.ARRAY.items(
-          rules.OBJECT({
-            email: rules.EMAIL,
-            name: rules.STRING,
-          })
-        ).required(),
-        cc: rules.ARRAY.items(
-          rules.OBJECT({
-            email: rules.EMAIL,
-            name: rules.STRING,
-          })
-        ).optional(),
-        bcc: rules.ARRAY.items(
-          rules.OBJECT({
-            email: rules.EMAIL,
-            name: rules.STRING,
-          })
-        ).optional(),
-      })
-      .required(),
+    .OBJECT({
+      to: rules.ARRAY.items(
+        rules.OBJECT({
+          email: rules.EMAIL,
+          name: rules.STRING,
+        })
+      ).required(),
+      cc: rules.ARRAY.items(
+        rules.OBJECT({
+          email: rules.EMAIL,
+          name: rules.STRING,
+        })
+      ).optional(),
+      bcc: rules.ARRAY.items(
+        rules.OBJECT({
+          email: rules.EMAIL,
+          name: rules.STRING,
+        })
+      ).optional(),
+    })
+    .required(),
     attachments: rules.ARRAY.optional(),
   });
 
