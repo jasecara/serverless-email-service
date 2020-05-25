@@ -17,15 +17,16 @@ Content-Type: application/json
     ],
     "cc": [
       {
-        "email": "oscar@gmail.com",
+        "email": "stanley@example.com",
         "name": "Stanley Hudson"
       }
     ],
     "bcc": [
       {
-        "email": "jasecara@gmail.com",
+        "email": "dwight@example.com",
         "name": "Dwight Schrute"
       }
     ]
   }
 }
+
