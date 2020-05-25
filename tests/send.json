@@ -1,6 +1,6 @@
 {
   "from": "noreply@example.com",
-  "subject": "This is the subject of email",
+  "subject": "This is the subject of the email",
   "content": {
     "text": "This is the plain text email content",
     "html": "<html><body><h1>This is the html email content</h1></body></html>"
@@ -14,13 +14,13 @@
     ],
     "cc": [
       {
-        "email": "oscar@gmail.com",
+        "email": "stanley@example.com",
         "name": "Stanley Hudson"
       }
     ],
     "bcc": [
       {
-        "email": "jasecara@gmail.com",
+        "email": "dwight@example.com",
         "name": "Dwight Schrute"
       }
     ]
