@@ -14,19 +14,27 @@ More Info: [Verify Domain On AWS for SES](https://docs.aws.amazon.com/ses/latest
 
 ### Deploying Cloud Formation Stack
 Serverless is used to prepare and deploy this Cloud Formation Stack to AWS.
-You can learn more about serverless framework and how to quickly [get started here](https://www.serverless.com/framework/docs/getting-started/).
+You can learn more about Serverless Framework and how to quickly [get started here](https://www.serverless.com/framework/docs/getting-started/).
  
-Once you have verified serverless framework is installed and added your aws profile, you can deploy the stack to cloud formation
+Once you have verified Serverless Framework is installed and added your aws profile, you can deploy the stack to cloud formation.
 
 ```
 sls deploy
 ```
 
-You can additionally deploy to other stages by passing an optional stage parameter value
+You can additionally deploy to other stages by passing an optional stage parameter value.
 ```
 sls deploy --stage=dev
 sls deploy --stage=qa
 sls deploy --stage=prd
+```
+
+### Removing the Email Service Stack
+
+You can remove the stack by running the following command:
+
+```
+sls remove
 ```
 
 ### Enabling Email Status Notifications
@@ -37,11 +45,11 @@ when events occur (IE Delivered, Bounced, Opened).
 2. Select Add Destination.
 3. Enter "new-notification-topic" or something similar for the name.
 4. Select which email event types you would like to listen for.
-5. Select the SNS ARN for delivery notifications created by the stack. (email-service-dev-notification on DEV stage)
+5. Select the SNS ARN for delivery notifications created by the stack. (email-service-dev-notification on DEV stage).
 
 ### Sending Email
 
-Once you've deployed the service, you can send an email by issuing a POST request to the send endpoint.
+Once you've deployed the service, you can send an email by issuing a POST request:
 
 ```
 POST https://${API_ID}.execute-api.us-east-1.amazonaws.com/dev/send
