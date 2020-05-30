@@ -5,7 +5,7 @@ Once deployed, you can send email via a simple POST to the exposed endpoint. You
 outbound email via the provisioned DynamoDB Record Table. For compliance and auditing purposes, once the configurable 
 lifecycle period has expired records are automatically deleted.
 
-##Setup
+## Setup
 
 ### Adding / Verifying Domain for SES
 In order to use this service, you have at least one domain setup for Amazon Simple Email Service(SES) which has completed verification.
