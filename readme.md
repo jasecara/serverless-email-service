@@ -29,6 +29,14 @@ sls deploy --stage=qa
 sls deploy --stage=prd
 ```
 
+### Removing the Email Service Stack
+
+You can remove the stack by running the following command:
+
+```
+sls remove
+```
+
 ### Enabling Email Status Notifications
 Once your stack is deployed, you must add a destination to SES configuration so that emails can be tracked
 when events occur (IE Delivered, Bounced, Opened).
